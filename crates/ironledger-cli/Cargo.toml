@@ -1,0 +1,28 @@
+[package]
+name = "ironledger-cli"
+description = "Operator CLI: end-to-end demo, balances, reconciliation and replay"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "ironledger"
+path = "src/main.rs"
+
+[dependencies]
+ironledger-domain = { workspace = true }
+ironledger-ledger = { workspace = true }
+ironledger-projector = { workspace = true }
+ironledger-reconciler = { workspace = true }
+ironledger-storage-postgres = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
