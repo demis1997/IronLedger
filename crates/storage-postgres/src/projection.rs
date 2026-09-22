@@ -69,12 +69,11 @@ impl ProjectionStore for PostgresProjection {
             let current = row
                 .as_ref()
                 .map(|r| amount_from_str(r.try_get::<String, _>("amount_atomic")?.as_str()))
-                .transpose()
-                .map_err(StorageError::from)?
+                .transpose()?
                 .unwrap_or(ironledger_domain::AtomicAmount::ZERO);
             let updated = current
                 .checked_add(posting.amount)
-                .map_err(|err| ProjectorError::Domain(err))?;
+                .map_err(ProjectorError::Domain)?;
             if row.is_some() {
                 sqlx::query(
                     r#"

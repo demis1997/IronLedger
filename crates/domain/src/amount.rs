@@ -123,7 +123,7 @@ impl<'de> Deserialize<'de> for AtomicAmount {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct AmountVisitor;
 
-        impl<'v> Visitor<'v> for AmountVisitor {
+        impl Visitor<'_> for AmountVisitor {
             type Value = AtomicAmount;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

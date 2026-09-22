@@ -619,13 +619,14 @@ fn validated_description(description: &str) -> Result<String, LedgerError> {
 }
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod tests {
     use super::*;
     use crate::chart;
     use crate::command::{AuditRequest, CommandMeta, PostingInput};
     use crate::memory::InMemoryLedger;
     use crate::port::OutboxRepo;
-    use ironledger_domain::{AccountKind, AccountStatus, IdempotencyKey};
+    use ironledger_domain::{AccountKind, AccountStatus};
     use std::time::Duration;
 
     struct Fixture {

@@ -1,4 +1,11 @@
-.PHONY: setup up down migrate build test test-integration lint audit deny bench demo reconcile clean fmt
+.PHONY: help setup up down migrate build test test-integration lint audit deny bench demo reconcile clean fmt
+
+help:
+	@printf '%s\n' \
+		'IronLedger developer targets:' \
+		'  setup / up / down / migrate' \
+		'  build / test / test-integration / lint / fmt' \
+		'  audit / deny / bench / demo / reconcile / clean'
 
 setup:
 	rustup show
@@ -24,6 +31,7 @@ test-integration:
 
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
+	cargo clippy -p ironledger-event-bus --all-targets --no-default-features -- -D warnings
 
 fmt:
 	cargo fmt --all -- --check

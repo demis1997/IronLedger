@@ -2,7 +2,7 @@
 //!
 //! Operational HTTP surface: liveness, readiness, Prometheus metrics and
 //! administrative queries. Administrative routes require an [`Authorizer`];
-//! the bundled [`DevTokenAuthorizer`] is for local development only.
+//! the bundled [`DevTokenAuthorizer`](auth::DevTokenAuthorizer) is for local development only.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]

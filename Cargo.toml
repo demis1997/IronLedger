@@ -18,6 +18,7 @@ members = [
     "benches",
     "tests/integration",
 ]
+exclude = ["fuzz"]
 default-members = [
     "crates/domain",
     "crates/ledger",

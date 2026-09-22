@@ -716,8 +716,7 @@ impl ConsumerRepo for PostgresStore {
                         updated_at: offset.try_get("updated_at")?,
                     })
                 })
-                .collect::<Result<Vec<_>, StorageError>>()
-                .map_err(StorageError::from)?;
+                .collect::<Result<Vec<_>, StorageError>>()?;
             out.push(ConsumerStatus {
                 consumer,
                 processed_events: row

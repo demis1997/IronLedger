@@ -3,8 +3,11 @@
 use crate::config::BusConfig;
 use crate::error::BusError;
 use ironledger_domain::LedgerEvent;
+#[cfg(feature = "kafka")]
 use metrics::{counter, histogram};
+#[cfg(feature = "kafka")]
 use std::time::Instant;
+#[cfg(feature = "kafka")]
 use tracing::{error, info, warn};
 
 #[cfg(feature = "kafka")]
@@ -73,7 +76,6 @@ impl KafkaPublisher {
 #[cfg(feature = "kafka")]
 pub struct KafkaConsumer {
     consumer: StreamConsumer,
-    topic: String,
     dlq: String,
     publisher: KafkaPublisher,
 }
@@ -95,7 +97,6 @@ impl KafkaConsumer {
         let publisher = KafkaPublisher::new(config)?;
         Ok(Self {
             consumer,
-            topic: config.ledger_topic.clone(),
             dlq: config.dead_letter_topic.clone(),
             publisher,
         })
@@ -171,6 +172,11 @@ impl KafkaConsumer {
 
     async fn send_dlq(&self, event: &LedgerEvent, reason: &str) -> Result<(), BusError> {
         counter!("ironledger_kafka_dlq_total").increment(1);
+        warn!(
+            event_id = %event.event_id,
+            reason,
+            "routing event to dead-letter topic"
+        );
         let payload = event
             .to_bytes()
             .map_err(|err| BusError::Encode(err.to_string()))?;
@@ -188,12 +194,14 @@ mod stub {
     pub struct KafkaPublisher;
 
     impl KafkaPublisher {
+        /// Return a configuration error because Kafka support is disabled.
         pub fn new(_config: &BusConfig) -> Result<Self, BusError> {
             Err(BusError::Config(
                 "kafka feature disabled; rebuild with --features kafka".into(),
             ))
         }
 
+        /// Return a configuration error because Kafka support is disabled.
         pub async fn publish(&self, _key: &str, _event: &LedgerEvent) -> Result<(), BusError> {
             Err(BusError::Config("kafka feature disabled".into()))
         }

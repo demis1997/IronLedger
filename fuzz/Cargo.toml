@@ -1,0 +1,19 @@
+[package]
+name = "ironledger-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.7"
+ironledger-domain = { path = "../crates/domain" }
+
+[[bin]]
+name = "journal_balance"
+path = "fuzz_targets/journal_balance.rs"
+doc = false
+bench = false
+test = false

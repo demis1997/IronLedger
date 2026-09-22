@@ -2,12 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
 
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
+  DATABASE_URL: postgres://ironledger:ironledger@localhost:5432/ironledger
 
 jobs:
   rust:
@@ -22,24 +23,55 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
+          --health-cmd "pg_isready -U ironledger"
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
-    env:
-      DATABASE_URL: postgres://ironledger:ironledger@localhost:5432/ironledger
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@1.85.1
         with:
           components: rustfmt, clippy
+
       - uses: Swatinem/rust-cache@v2
-      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config libssl-dev protobuf-compiler
-      - run: cargo fmt --all -- --check
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-      - run: cargo test --workspace
-      - run: cargo build --workspace --release
-      - run: cargo doc --workspace --no-deps
-      - run: docker compose config
-      - run: cargo install cargo-audit --locked && cargo audit
-      - run: cargo install cargo-deny --locked && cargo deny check
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake pkg-config libssl-dev protobuf-compiler
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Event bus without Kafka
+        run: cargo clippy -p ironledger-event-bus --all-targets --no-default-features -- -D warnings
+
+      - name: Unit and integration tests
+        run: cargo test --workspace
+
+      - name: PostgreSQL smoke (idempotent deposit)
+        run: cargo test -p ironledger-integration-tests --test postgres_smoke -- --ignored --nocapture
+
+      - name: Release build
+        run: cargo build --workspace --release
+
+      - name: Docs
+        run: cargo doc --workspace --no-deps
+
+      - name: Docker Compose config
+        run: docker compose config
+
+      - name: Install cargo-audit and cargo-deny
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit,cargo-deny
+
+      - name: Dependency audit
+        run: cargo audit
+
+      - name: License and ban policy
+        run: cargo deny check
