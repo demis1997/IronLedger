@@ -1,0 +1,30 @@
+[package]
+name = "ironledger-api-grpc"
+description = "Tonic gRPC surface for the IronLedger ledger service"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ironledger-domain = { workspace = true }
+ironledger-ledger = { workspace = true }
+ironledger-reconciler = { workspace = true }
+ironledger-storage-postgres = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+
+[build-dependencies]
+tonic-build = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

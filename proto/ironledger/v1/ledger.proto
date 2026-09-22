@@ -1,0 +1,299 @@
+syntax = "proto3";
+
+package ironledger.v1;
+
+// IronLedger public write/read API.
+//
+// Monetary quantities are always transported as *atomic unit* decimal strings
+// (e.g. satoshis for BTC, micro-USD for USD). Floating point types are
+// deliberately absent from this schema.
+
+// ---------------------------------------------------------------------------
+// Common messages
+// ---------------------------------------------------------------------------
+
+enum AccountKind {
+  ACCOUNT_KIND_UNSPECIFIED = 0;
+  ACCOUNT_KIND_CUSTOMER_AVAILABLE = 1;
+  ACCOUNT_KIND_CUSTOMER_LOCKED = 2;
+  ACCOUNT_KIND_EXCHANGE_HOT_WALLET = 3;
+  ACCOUNT_KIND_EXCHANGE_COLD_WALLET = 4;
+  ACCOUNT_KIND_FEE_REVENUE = 5;
+  ACCOUNT_KIND_WITHDRAWAL_CLEARING = 6;
+  ACCOUNT_KIND_DEPOSIT_CLEARING = 7;
+  ACCOUNT_KIND_OTHER = 8;
+}
+
+enum AccountPolicy {
+  ACCOUNT_POLICY_UNSPECIFIED = 0;
+  ACCOUNT_POLICY_NON_NEGATIVE = 1;
+  ACCOUNT_POLICY_ALLOW_NEGATIVE = 2;
+}
+
+enum AccountStatus {
+  ACCOUNT_STATUS_UNSPECIFIED = 0;
+  ACCOUNT_STATUS_ACTIVE = 1;
+  ACCOUNT_STATUS_FROZEN = 2;
+  ACCOUNT_STATUS_CLOSED = 3;
+}
+
+enum PostingSide {
+  POSTING_SIDE_UNSPECIFIED = 0;
+  POSTING_SIDE_DEBIT = 1;
+  POSTING_SIDE_CREDIT = 2;
+}
+
+message Account {
+  string id = 1;
+  string name = 2;
+  AccountKind kind = 3;
+  AccountPolicy policy = 4;
+  AccountStatus status = 5;
+  string created_at = 6; // RFC 3339
+}
+
+message Posting {
+  string account_id = 1;
+  string asset = 2;
+  // Signed atomic units as a decimal string.
+  string amount_atomic = 3;
+  PostingSide side = 4;
+}
+
+message JournalEntry {
+  string transaction_id = 1;
+  string idempotency_key = 2;
+  string description = 3;
+  repeated Posting postings = 4;
+  string status = 5;
+  string correlation_id = 6;
+  string causation_id = 7;
+  string created_at = 8; // RFC 3339
+}
+
+message Balance {
+  string account_id = 1;
+  string asset = 2;
+  string amount_atomic = 3;
+  string updated_at = 4; // RFC 3339
+}
+
+// Common request preamble. `idempotency_key` is mandatory for every mutating
+// call; replaying the same key with the same payload returns the original
+// result, while a different payload is rejected with FAILED_PRECONDITION.
+message CommandContext {
+  string idempotency_key = 1;
+  string correlation_id = 2; // optional UUID; generated when empty
+  string causation_id = 3;   // optional UUID; generated when empty
+}
+
+message AuditMetadata {
+  string actor = 1;
+  string reason = 2;
+  string ticket_id = 3;
+}
+
+message CommandResult {
+  string transaction_id = 1;
+  // True when the response was replayed from the idempotency store.
+  bool replayed = 2;
+  string posted_at = 3; // RFC 3339
+}
+
+// ---------------------------------------------------------------------------
+// Requests / responses
+// ---------------------------------------------------------------------------
+
+message CreateAccountRequest {
+  CommandContext context = 1;
+  string name = 2;
+  AccountKind kind = 3;
+  AccountPolicy policy = 4;
+}
+
+message CreateAccountResponse {
+  Account account = 1;
+  bool replayed = 2;
+}
+
+message SubmitJournalEntryRequest {
+  CommandContext context = 1;
+  string description = 2;
+  repeated Posting postings = 3;
+}
+
+message SubmitJournalEntryResponse {
+  CommandResult result = 1;
+}
+
+message RecordDepositRequest {
+  CommandContext context = 1;
+  string customer_available_account_id = 2;
+  string deposit_clearing_account_id = 3;
+  // Optional custody mirror; when set the deposit debits the hot wallet.
+  string hot_wallet_account_id = 4;
+  string asset = 5;
+  string amount_atomic = 6;
+  string external_reference = 7;
+}
+
+message RecordDepositResponse {
+  CommandResult result = 1;
+}
+
+message RequestWithdrawalRequest {
+  CommandContext context = 1;
+  string customer_available_account_id = 2;
+  string customer_locked_account_id = 3;
+  string asset = 4;
+  string amount_atomic = 5;
+  string destination_reference = 6;
+}
+
+message RequestWithdrawalResponse {
+  CommandResult result = 1;
+}
+
+message CompleteWithdrawalRequest {
+  CommandContext context = 1;
+  string customer_locked_account_id = 2;
+  string withdrawal_clearing_account_id = 3;
+  string hot_wallet_account_id = 4;
+  string asset = 5;
+  string amount_atomic = 6;
+  string settlement_reference = 7;
+}
+
+message CompleteWithdrawalResponse {
+  CommandResult result = 1;
+}
+
+message RejectWithdrawalRequest {
+  CommandContext context = 1;
+  string customer_locked_account_id = 2;
+  string customer_available_account_id = 3;
+  string asset = 4;
+  string amount_atomic = 5;
+  string reason = 6;
+}
+
+message RejectWithdrawalResponse {
+  CommandResult result = 1;
+}
+
+message RecordTradeSettlementRequest {
+  CommandContext context = 1;
+  string buyer_available_account_id = 2;
+  string seller_available_account_id = 3;
+  string base_asset = 4;
+  string base_amount_atomic = 5;
+  string quote_asset = 6;
+  string quote_amount_atomic = 7;
+  string trade_reference = 8;
+}
+
+message RecordTradeSettlementResponse {
+  CommandResult result = 1;
+}
+
+message RecordTradingFeeRequest {
+  CommandContext context = 1;
+  string customer_available_account_id = 2;
+  string fee_revenue_account_id = 3;
+  string asset = 4;
+  string amount_atomic = 5;
+}
+
+message RecordTradingFeeResponse {
+  CommandResult result = 1;
+}
+
+message RecordAdminAdjustmentRequest {
+  CommandContext context = 1;
+  string from_account_id = 2;
+  string to_account_id = 3;
+  string asset = 4;
+  string amount_atomic = 5;
+  AuditMetadata audit = 6;
+}
+
+message RecordAdminAdjustmentResponse {
+  CommandResult result = 1;
+}
+
+message GetTransactionRequest {
+  string transaction_id = 1;
+}
+
+message GetTransactionResponse {
+  JournalEntry entry = 1;
+}
+
+message GetBalanceRequest {
+  string account_id = 1;
+  // Optional: empty returns every asset held by the account.
+  string asset = 2;
+}
+
+message GetBalanceResponse {
+  repeated Balance balances = 1;
+}
+
+message ListAccountEntriesRequest {
+  string account_id = 1;
+  uint32 limit = 2;  // clamped server side
+  uint64 offset = 3;
+}
+
+message ListAccountEntriesResponse {
+  repeated JournalEntry entries = 1;
+}
+
+message TriggerReconciliationRequest {
+  // When true only a summary is returned, without per-account discrepancies.
+  bool summary_only = 1;
+}
+
+message Discrepancy {
+  string account_id = 1;
+  string asset = 2;
+  string expected_atomic = 3;
+  string actual_atomic = 4;
+  string delta_atomic = 5;
+  string source = 6;
+}
+
+message TriggerReconciliationResponse {
+  string run_id = 1;
+  uint64 checked_balances = 2;
+  bool balanced = 3;
+  repeated Discrepancy discrepancies = 4;
+  string started_at = 5;
+  string finished_at = 6;
+}
+
+// ---------------------------------------------------------------------------
+// Services
+// ---------------------------------------------------------------------------
+
+service LedgerWriteService {
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  rpc SubmitJournalEntry(SubmitJournalEntryRequest) returns (SubmitJournalEntryResponse);
+  rpc RecordDeposit(RecordDepositRequest) returns (RecordDepositResponse);
+  rpc RequestWithdrawal(RequestWithdrawalRequest) returns (RequestWithdrawalResponse);
+  rpc CompleteWithdrawal(CompleteWithdrawalRequest) returns (CompleteWithdrawalResponse);
+  rpc RejectWithdrawal(RejectWithdrawalRequest) returns (RejectWithdrawalResponse);
+  rpc RecordTradeSettlement(RecordTradeSettlementRequest) returns (RecordTradeSettlementResponse);
+  rpc RecordTradingFee(RecordTradingFeeRequest) returns (RecordTradingFeeResponse);
+  rpc RecordAdminAdjustment(RecordAdminAdjustmentRequest) returns (RecordAdminAdjustmentResponse);
+}
+
+service LedgerQueryService {
+  rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc ListAccountEntries(ListAccountEntriesRequest) returns (ListAccountEntriesResponse);
+}
+
+service LedgerAdminService {
+  rpc TriggerReconciliation(TriggerReconciliationRequest) returns (TriggerReconciliationResponse);
+}
