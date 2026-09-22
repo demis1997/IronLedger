@@ -30,7 +30,7 @@ jobs:
       DATABASE_URL: postgres://ironledger:ironledger@localhost:5432/ironledger
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.85.1
+      - uses: dtolnay/rust-toolchain@1.120.0
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
