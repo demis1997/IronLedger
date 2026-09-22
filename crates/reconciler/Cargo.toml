@@ -1,0 +1,24 @@
+[package]
+name = "ironledger-reconciler"
+description = "Rebuilds balances from posting history and reports discrepancies"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ironledger-domain = { workspace = true }
+ironledger-ledger = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+metrics = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
