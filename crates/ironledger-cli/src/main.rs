@@ -31,6 +31,9 @@ enum Commands {
     Balance {
         /// Account name.
         account: String,
+        /// Emit machine-readable JSON instead of text.
+        #[arg(long)]
+        json: bool,
     },
     /// Run reconciliation against posting history.
     Reconcile,
@@ -58,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
 
     match cli.command {
         Commands::Demo => run_demo(ledger, store).await?,
-        Commands::Balance { account } => print_balance(&ledger, &account).await?,
+        Commands::Balance { account, json } => print_balance(&ledger, &account, json).await?,
         Commands::Reconcile => run_reconcile(store).await?,
         Commands::Replay => run_replay(store).await?,
     }
@@ -175,8 +178,8 @@ async fn run_demo(ledger: Arc<LedgerService>, store: Arc<PostgresStore>) -> anyh
         })
         .await?;
 
-    print_balance(&ledger, &customer_available("alice")).await?;
-    print_balance(&ledger, &customer_available("bob")).await?;
+    print_balance(&ledger, &customer_available("alice"), false).await?;
+    print_balance(&ledger, &customer_available("bob"), false).await?;
 
     run_reconcile(store.clone()).await?;
     run_replay(store).await?;
@@ -185,12 +188,31 @@ async fn run_demo(ledger: Arc<LedgerService>, store: Arc<PostgresStore>) -> anyh
     Ok(())
 }
 
-async fn print_balance(ledger: &LedgerService, account_name: &str) -> anyhow::Result<()> {
+async fn print_balance(
+    ledger: &LedgerService,
+    account_name: &str,
+    json: bool,
+) -> anyhow::Result<()> {
     let account = ledger
         .find_account_by_name(account_name)
         .await?
         .ok_or_else(|| anyhow::anyhow!("account not found"))?;
     let balances = ledger.get_balances(account.id, None).await?;
+    if json {
+        let payload: Vec<_> = balances
+            .iter()
+            .map(|balance| {
+                serde_json::json!({
+                    "account": account_name,
+                    "asset": balance.asset.to_string(),
+                    "amount_atomic": balance.amount.raw().to_string(),
+                    "updated_at": balance.updated_at.to_rfc3339(),
+                })
+            })
+            .collect();
+        println!("{}", serde_json::to_string_pretty(&payload)?);
+        return Ok(());
+    }
     println!("Account {account_name}:");
     for balance in balances {
         println!("  {} => {}", balance.asset, balance.amount.raw());
