@@ -1,0 +1,35 @@
+[package]
+name = "ironledger-ledger-service"
+description = "Ledger write service: gRPC API, operational HTTP and outbox relay"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "ledger-service"
+path = "src/main.rs"
+
+[dependencies]
+ironledger-api-grpc = { workspace = true }
+ironledger-api-http = { workspace = true }
+ironledger-domain = { workspace = true }
+ironledger-event-bus = { workspace = true }
+ironledger-ledger = { workspace = true }
+ironledger-reconciler = { workspace = true }
+ironledger-storage-postgres = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+axum = { workspace = true }
+tonic = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[features]
+default = ["kafka"]
+kafka = ["ironledger-event-bus/kafka"]
