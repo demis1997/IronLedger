@@ -91,7 +91,7 @@ clap = { version = "4.5.28", features = ["derive", "env"] }
 
 # Testing / benches
 proptest = "1.6.0"
-criterion = { version = "0.5.1", features = ["html_reports"] }
+criterion = { version = "0.7.0", features = ["html_reports"] }
 tempfile = "3.16.0"
 reqwest = { version = "0.12.12", default-features = false, features = ["json", "rustls-tls"] }
 testcontainers = "0.23.1"
