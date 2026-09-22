@@ -52,7 +52,7 @@ async-trait = "0.1.86"
 axum = { version = "0.8.1", features = ["macros"] }
 tower = { version = "0.5.2", features = ["limit", "timeout", "util"] }
 tower-http = { version = "0.6.2", features = ["trace", "limit", "timeout", "cors"] }
-tonic = "0.12.3"
+tonic = "0.14.5"
 tonic-build = "0.12.3"
 prost = "0.13.4"
 prost-types = "0.13.4"
