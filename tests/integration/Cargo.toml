@@ -1,0 +1,30 @@
+[package]
+name = "ironledger-integration-tests"
+description = "Database-backed integration tests (require DATABASE_URL)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+ironledger-domain = { workspace = true }
+ironledger-ledger = { workspace = true, features = ["memory"] }
+ironledger-projector = { workspace = true, features = ["memory"] }
+async-trait = { workspace = true }
+ironledger-reconciler = { workspace = true }
+ironledger-storage-postgres = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+uuid = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
