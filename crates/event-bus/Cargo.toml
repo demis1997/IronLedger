@@ -1,0 +1,33 @@
+[package]
+name = "ironledger-event-bus"
+description = "Typed event envelopes, Kafka producer/consumer ports and rdkafka adapters"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ironledger-domain = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+futures = { workspace = true }
+metrics = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+ironledger-ledger = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+rdkafka = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time", "test-util"] }
+
+[features]
+default = ["kafka"]
+# rdkafka adapters; requires cmake and a C toolchain to build librdkafka.
+kafka = ["dep:rdkafka"]
