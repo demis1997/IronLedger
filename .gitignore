@@ -1,0 +1,38 @@
+# Generated / build
+/target/
+**/*.rs.bk
+*.pdb
+.DS_Store
+
+# Environment / secrets
+.env
+.env.local
+*.pem
+*.key
+credentials.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# SQLx offline (keep committed when present)
+# .sqlx/ is intentionally committed for CI offline checks
+
+# Coverage / profiling
+*.profraw
+*.profdata
+coverage/
+lcov.info
+
+# Local data
+/data/
+/tmp/
+*.log
+
+# Criterion
+/benches/target/
+
+# OS
+Thumbs.db

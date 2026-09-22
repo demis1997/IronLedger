@@ -1,0 +1,116 @@
+[workspace]
+# MSRV-aware resolver: keeps transitive dependency selection compatible with
+# the pinned toolchain in rust-toolchain.toml.
+resolver = "3"
+members = [
+    "crates/domain",
+    "crates/ledger",
+    "crates/storage-postgres",
+    "crates/event-bus",
+    "crates/api-grpc",
+    "crates/api-http",
+    "crates/projector",
+    "crates/reconciler",
+    "crates/ironledger-cli",
+    "services/ledger-service",
+    "services/projector-service",
+    "services/reconciler-service",
+    "benches",
+    "tests/integration",
+]
+default-members = [
+    "crates/domain",
+    "crates/ledger",
+    "crates/storage-postgres",
+    "crates/event-bus",
+    "crates/api-grpc",
+    "crates/api-http",
+    "crates/projector",
+    "crates/reconciler",
+    "crates/ironledger-cli",
+    "services/ledger-service",
+    "services/projector-service",
+    "services/reconciler-service",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["Demis <demis1997@users.noreply.github.com>"]
+repository = "https://github.com/demis1997/IronLedger"
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros", "sync", "time", "signal", "net", "io-util"] }
+tokio-util = { version = "0.7.13", features = ["rt"] }
+futures = "0.3.31"
+async-trait = "0.1.86"
+
+# HTTP / gRPC
+axum = { version = "0.8.1", features = ["macros"] }
+tower = { version = "0.5.2", features = ["limit", "timeout", "util"] }
+tower-http = { version = "0.6.2", features = ["trace", "limit", "timeout", "cors"] }
+tonic = "0.12.3"
+tonic-build = "0.12.3"
+prost = "0.13.4"
+prost-types = "0.13.4"
+hyper = "1.6.0"
+
+# Persistence
+sqlx = { version = "0.8.3", features = ["runtime-tokio", "postgres", "uuid", "chrono", "migrate", "macros"] }
+
+# Messaging
+rdkafka = { version = "0.37.0", features = ["cmake-build", "ssl-vendored", "tokio"] }
+
+# Serialization
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+sha2 = "0.10.8"
+hex = "0.4.3"
+
+# Domain helpers
+uuid = { version = "1.12.1", features = ["v4", "v7", "serde"] }
+chrono = { version = "0.4.39", features = ["serde", "clock"] }
+thiserror = "2.0.11"
+anyhow = "1.0.95"
+
+# Observability
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
+opentelemetry = { version = "0.27.1", features = ["trace", "metrics"] }
+opentelemetry_sdk = { version = "0.27.1", features = ["rt-tokio", "trace", "metrics"] }
+opentelemetry-otlp = { version = "0.27.0", features = ["grpc-tonic", "trace", "metrics"] }
+tracing-opentelemetry = "0.28.0"
+metrics = "0.24.1"
+metrics-exporter-prometheus = "0.16.2"
+
+# CLI
+clap = { version = "4.5.28", features = ["derive", "env"] }
+
+# Testing / benches
+proptest = "1.6.0"
+criterion = { version = "0.5.1", features = ["html_reports"] }
+tempfile = "3.16.0"
+reqwest = { version = "0.12.12", default-features = false, features = ["json", "rustls-tls"] }
+testcontainers = "0.23.1"
+testcontainers-modules = { version = "0.11.4", features = ["postgres", "kafka"] }
+
+# Internal crates
+ironledger-domain = { path = "crates/domain" }
+ironledger-ledger = { path = "crates/ledger" }
+ironledger-storage-postgres = { path = "crates/storage-postgres" }
+ironledger-event-bus = { path = "crates/event-bus" }
+ironledger-api-grpc = { path = "crates/api-grpc" }
+ironledger-api-http = { path = "crates/api-http" }
+ironledger-projector = { path = "crates/projector" }
+ironledger-reconciler = { path = "crates/reconciler" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
+[profile.bench]
+inherits = "release"
