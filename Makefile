@@ -1,4 +1,16 @@
-.PHONY: setup up down migrate build test test-integration lint audit deny bench demo reconcile clean fmt
+.PHONY: help setup up down migrate build test test-integration lint audit deny bench demo reconcile clean fmt
+
+help:
+	@printf '%s\n' \
+		'IronLedger developer targets:' \
+		'  setup             fetch rustc toolchain and crates' \
+		'  up / down         start or stop Docker dependencies' \
+		'  migrate           apply SQL migrations' \
+		'  build / test      release build or workspace tests' \
+		'  lint / fmt        clippy (-D warnings) / rustfmt check' \
+		'  audit / deny      cargo-audit / cargo-deny' \
+		'  demo / reconcile  run CLI demo or reconciliation' \
+		'  clean             cargo clean'
 
 setup:
 	rustup show
