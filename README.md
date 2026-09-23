@@ -46,8 +46,9 @@ flowchart LR
 ## Quick start
 
 Install Rust via rustup (the repository pins Rust 1.85.1), a C/C++ toolchain,
-CMake, pkg-config, and the Protocol Buffers compiler (`protoc`). Docker Compose
-is required for the local PostgreSQL and Redpanda services.
+CMake, pkg-config, and the Protocol Buffers compiler (`protoc`). The commands below
+also require the SQLx CLI (`cargo sqlx`) and Docker Compose for PostgreSQL and
+Redpanda.
 
 ```bash
 cp .env.example .env
