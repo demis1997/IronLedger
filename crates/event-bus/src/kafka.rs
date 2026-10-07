@@ -73,7 +73,6 @@ impl KafkaPublisher {
 #[cfg(feature = "kafka")]
 pub struct KafkaConsumer {
     consumer: StreamConsumer,
-    topic: String,
     dlq: String,
     publisher: KafkaPublisher,
 }
@@ -95,7 +94,6 @@ impl KafkaConsumer {
         let publisher = KafkaPublisher::new(config)?;
         Ok(Self {
             consumer,
-            topic: config.ledger_topic.clone(),
             dlq: config.dead_letter_topic.clone(),
             publisher,
         })
@@ -169,7 +167,7 @@ impl KafkaConsumer {
         Ok(())
     }
 
-    async fn send_dlq(&self, event: &LedgerEvent, reason: &str) -> Result<(), BusError> {
+    async fn send_dlq(&self, event: &LedgerEvent, _reason: &str) -> Result<(), BusError> {
         counter!("ironledger_kafka_dlq_total").increment(1);
         let payload = event
             .to_bytes()

@@ -625,7 +625,7 @@ mod tests {
     use crate::command::{AuditRequest, CommandMeta, PostingInput};
     use crate::memory::InMemoryLedger;
     use crate::port::OutboxRepo;
-    use ironledger_domain::{AccountKind, AccountStatus, IdempotencyKey};
+    use ironledger_domain::{AccountKind, AccountStatus};
     use std::time::Duration;
 
     struct Fixture {
@@ -754,7 +754,8 @@ mod tests {
     #[tokio::test]
     async fn reusing_a_key_with_a_different_payload_conflicts() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", btc(), 100, "dep-1"))
             .await
             .unwrap();
@@ -776,7 +777,8 @@ mod tests {
     #[tokio::test]
     async fn withdrawal_beyond_the_balance_is_rejected() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", btc(), 100, "dep-1"))
             .await
             .unwrap();
@@ -807,11 +809,13 @@ mod tests {
     #[tokio::test]
     async fn withdrawal_lifecycle_moves_funds_out_of_custody() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", btc(), 500, "dep-1"))
             .await
             .unwrap();
-        fx.service
+        let _ = fx
+            .service
             .request_withdrawal(RequestWithdrawalCommand {
                 meta: CommandMeta::from_key("wd-1").unwrap(),
                 customer_available: fx.available("alice"),
@@ -829,7 +833,8 @@ mod tests {
         );
         assert_eq!(fx.store.balance_of(fx.locked("alice"), &btc()).raw(), 200);
 
-        fx.service
+        let _ = fx
+            .service
             .complete_withdrawal(CompleteWithdrawalCommand {
                 meta: CommandMeta::from_key("wd-1-complete").unwrap(),
                 customer_locked: fx.locked("alice"),
@@ -862,11 +867,13 @@ mod tests {
     #[tokio::test]
     async fn rejected_withdrawal_returns_locked_funds() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", btc(), 500, "dep-1"))
             .await
             .unwrap();
-        fx.service
+        let _ = fx
+            .service
             .request_withdrawal(RequestWithdrawalCommand {
                 meta: CommandMeta::from_key("wd-1").unwrap(),
                 customer_available: fx.available("alice"),
@@ -902,16 +909,19 @@ mod tests {
     #[tokio::test]
     async fn trade_settlement_swaps_two_assets() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", usd(), 50_000_000, "dep-usd"))
             .await
             .unwrap();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("bob", btc(), 100_000_000, "dep-btc"))
             .await
             .unwrap();
 
-        fx.service
+        let _ = fx
+            .service
             .record_trade_settlement(RecordTradeSettlementCommand {
                 meta: CommandMeta::from_key("trade-1").unwrap(),
                 buyer_available: fx.available("alice"),
@@ -940,11 +950,13 @@ mod tests {
     #[tokio::test]
     async fn trading_fee_moves_funds_to_revenue() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", usd(), 1_000_000, "dep-usd"))
             .await
             .unwrap();
-        fx.service
+        let _ = fx
+            .service
             .record_trading_fee(RecordTradingFeeCommand {
                 meta: CommandMeta::from_key("fee-1").unwrap(),
                 customer_available: fx.available("alice"),
@@ -968,12 +980,14 @@ mod tests {
     #[tokio::test]
     async fn admin_adjustment_emits_an_audit_event() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", usd(), 1_000, "dep-usd"))
             .await
             .unwrap();
 
-        fx.service
+        let _ = fx
+            .service
             .record_admin_adjustment(RecordAdminAdjustmentCommand {
                 meta: CommandMeta::from_key("adj-1").unwrap(),
                 from: fx.available("alice"),
@@ -1141,11 +1155,13 @@ mod tests {
     #[tokio::test]
     async fn every_command_enqueues_exactly_one_journal_event() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", btc(), 100, "dep-1"))
             .await
             .unwrap();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", btc(), 100, "dep-1"))
             .await
             .unwrap();
@@ -1162,7 +1178,8 @@ mod tests {
     #[tokio::test]
     async fn outbox_claims_are_leased_and_acknowledged() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", btc(), 100, "dep-1"))
             .await
             .unwrap();
@@ -1226,11 +1243,13 @@ mod tests {
     #[tokio::test]
     async fn balances_sum_to_zero_per_asset() {
         let fx = Fixture::new();
-        fx.service
+        let _ = fx
+            .service
             .record_deposit(fx.deposit("alice", usd(), 1_000_000, "dep-usd"))
             .await
             .unwrap();
-        fx.service
+        let _ = fx
+            .service
             .record_trading_fee(RecordTradingFeeCommand {
                 meta: CommandMeta::from_key("fee-1").unwrap(),
                 customer_available: fx.available("alice"),

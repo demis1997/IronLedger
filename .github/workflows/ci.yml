@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
@@ -12,6 +15,7 @@ env:
 jobs:
   rust:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16-alpine
@@ -34,12 +38,37 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config libssl-dev protobuf-compiler
+      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config libssl-dev libcurl4-openssl-dev protobuf-compiler
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-      - run: cargo test --workspace
-      - run: cargo build --workspace --release
-      - run: cargo doc --workspace --no-deps
+      - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --locked --workspace
+      - run: cargo build --locked --workspace --release
+      - run: cargo doc --locked --workspace --no-deps
       - run: docker compose config
-      - run: cargo install cargo-audit --locked && cargo audit
-      - run: cargo install cargo-deny --locked && cargo deny check
+
+  dependency-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # Security tool MSRV is separate from the application MSRV (1.85.1).
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: actions/cache@v4
+        id: security-tools
+        with:
+          path: |
+            ~/.cargo/bin/cargo-audit
+            ~/.cargo/bin/cargo-deny
+          key: ${{ runner.os }}-security-audit-0.22.2-deny-0.20.2-rust-1.88.0
+      - name: Install pinned security tools
+        id: tools
+        if: steps.security-tools.outputs.cache-hit != 'true'
+        run: |
+          cargo +1.88.0 install cargo-audit --version 0.22.2 --locked
+          cargo +1.88.0 install cargo-deny --version 0.20.2 --locked
+      - name: RustSec advisory checks
+        if: success()
+        run: cargo +1.88.0 audit
+      - name: Existing dependency license and source policy
+        if: always() && (steps.tools.outcome == 'success' || steps.security-tools.outputs.cache-hit == 'true')
+        run: cargo +1.88.0 deny check
