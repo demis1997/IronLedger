@@ -64,11 +64,11 @@ jobs:
         id: tools
         if: steps.security-tools.outputs.cache-hit != 'true'
         run: |
-          cargo install cargo-audit --version 0.22.2 --locked
-          cargo install cargo-deny --version 0.20.2 --locked
+          cargo +1.88.0 install cargo-audit --version 0.22.2 --locked
+          cargo +1.88.0 install cargo-deny --version 0.20.2 --locked
       - name: RustSec advisory checks
         if: success()
-        run: cargo audit
+        run: cargo +1.88.0 audit
       - name: Existing dependency license and source policy
         if: always() && (steps.tools.outcome == 'success' || steps.security-tools.outputs.cache-hit == 'true')
-        run: cargo deny check
+        run: cargo +1.88.0 deny check
