@@ -45,5 +45,30 @@ jobs:
       - run: cargo build --locked --workspace --release
       - run: cargo doc --locked --workspace --no-deps
       - run: docker compose config
-      - run: cargo install cargo-audit --locked && cargo audit
-      - run: cargo install cargo-deny --locked && cargo deny check
+
+  dependency-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # Security tool MSRV is separate from the application MSRV (1.85.1).
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: actions/cache@v4
+        id: security-tools
+        with:
+          path: |
+            ~/.cargo/bin/cargo-audit
+            ~/.cargo/bin/cargo-deny
+          key: ${{ runner.os }}-security-audit-0.22.2-deny-0.20.2-rust-1.88.0
+      - name: Install pinned security tools
+        id: tools
+        if: steps.security-tools.outputs.cache-hit != 'true'
+        run: |
+          cargo install cargo-audit --version 0.22.2 --locked
+          cargo install cargo-deny --version 0.20.2 --locked
+      - name: RustSec advisory checks
+        if: success()
+        run: cargo audit
+      - name: Existing dependency license and source policy
+        if: always() && (steps.tools.outcome == 'success' || steps.security-tools.outputs.cache-hit == 'true')
+        run: cargo deny check
